@@ -1,6 +1,6 @@
 const adminModel = require('../models/admin.model');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // ==========================================
 // 1. عمليات المصادقة (Authentication)
