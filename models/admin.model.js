@@ -1,5 +1,7 @@
 const pool = require('../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
+
+
 
 // البحث عن مدير بواسطة اسم المستخدم
 const findByUsername = async (username) => {
