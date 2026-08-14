@@ -25,6 +25,8 @@ router.put('/users/:id', checkToken, authController.updateAdmin);
 router.delete('/users/:id', checkToken, authController.deleteAdmin);
 
 
+router.get('/export/:slug', authController.exportData);
+
 
 // Brands CRUD
 router.get('/brands', checkToken, brandController.getAllBrands);

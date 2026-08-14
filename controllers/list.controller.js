@@ -15,10 +15,10 @@ const getAllLISTS = async (req, res) => {
 };
 
 const createLIST = async (req, res) => {
-    console.log("post list")
   try {
     const { email, lang, status, object, msg } = req.body;
- 
+    console.log(req.body)
+
     const newAd = await listModel.create({ email, lang, status, object, msg });
 
     res.status(201).json(newAd);

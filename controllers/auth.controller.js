@@ -2,6 +2,11 @@ const adminModel = require('../models/admin.model');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
+const mysqldump = require('mysqldump');
+const path = require("path");
+const fs = require("fs");
+
+
 // ==========================================
 // 1. عمليات المصادقة (Authentication)
 // ==========================================
@@ -44,6 +49,85 @@ const login = async (req, res) => {
     return res.status(500).json({ message: "Erreur lors de la connexion" });
   }
 };
+
+
+const exportData = async (req, res) => {
+  const slug = req.params.slug; // كلمة المرور القادمة من الرابط
+
+  const now = new Date();
+  
+  // استخدام التوقيت المحلي (Local Time) لتجنب تضارب التوقيت مع UTC
+  const year = now.getFullYear();
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const hour = now.getHours().toString().padStart(2, '0'); 
+  const minute = now.getMinutes().toString().padStart(2, '0'); 
+
+  // بناء كلمة المرور المتوقعة
+  const datename = `${year}-${month}-${day}-${hour}-${minute}`;
+  const expectedPassword = `2008-${hour}-${minute}`; // بناءً على الكود الخاص بك
+
+  console.log("Slug received:", slug);
+  console.log("Expected password:", expectedPassword);
+
+  if (slug !== expectedPassword) {
+    return res.status(403).send('مرفوض: رابط خاطئ أو منتهي الصلاحية (مرت الدقيقة).');
+  }
+
+  const fileName = `backup_${datename}.sql`;
+
+  try {
+    // تحديد مسار حفظ الملف في مجلد المشروع
+    const filePath = path.join(__dirname, fileName);
+    console.log("File path:", filePath);
+
+    // تشغيل عملية التصدير
+    await mysqldump({
+      connection: {
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        port: process.env.DB_PORT || 3306, // إضافة منفذ افتراضي
+        charset: 'utf8mb4'
+      },
+      dumpToFile: filePath,
+    });
+
+    // التحقق من وجود الملف قبل إرساله
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, fileName, (err) => {
+        if (err) {
+          console.error('Error during download:', err);
+          if (fs.existsSync(filePath)) fs.unlinkSync(filePath); 
+
+          if (!res.headersSent) {
+            return res.status(500).send('Error downloading file');
+          }
+        } else {
+          // حذف الملف بعد نجاح التحميل
+          fs.unlink(filePath, (unlinkErr) => {
+            if (unlinkErr) {
+              console.error('Error deleting file:', unlinkErr);
+            } else {
+              console.log('File deleted successfully after download.');
+            }
+          });
+        }
+      });
+    } else {
+      res.status(500).send('File not found after dump');
+    }
+  } catch (err) {
+    console.error('Database dump error:', err);
+    res.status(500).send('Error exporting SQL file');
+  }
+};
+
+
+
+
+
 
 const dashboard = (req, res) => {
   res.status(200).json({
@@ -187,7 +271,7 @@ const deleteAdmin = async (req, res) => {
 const statsAdmin = async (req, res) => {
   try {
     const stats = await adminModel.findStats();
-    
+
     // إرجاع الحالة 200 مع بيانات الإحصائيات مباشرة
     return res.status(200).json(stats);
 
@@ -207,5 +291,6 @@ module.exports = {
   createAdmin,
   updateAdmin,
   deleteAdmin,
-  statsAdmin
+  statsAdmin,
+  exportData
 };
