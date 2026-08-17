@@ -2,26 +2,26 @@ const pool = require('../config/db');
 
 const findAll = async (search = '', lang) => {
   let sql = `
-    SELECT w.*, 
-           b.name as brand_name, b.slug as brand_slug
-    FROM products w
-    LEFT JOIN brands b ON w.brand_id = b.id`;
+    SELECT p.*, 
+           category.name as category_name, c.slug as category_slug
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id`;
 
   const values = [];
 
   // تصفية شاملة تمت إزالة c.name لأن جدول collections غير مرتبط هنا
   if (search.trim() !== '') {
-    sql += ` WHERE w.name LIKE ? 
-             OR w.description LIKE ? 
-             OR b.name LIKE ? 
-             OR w.lang LIKE ? 
-             OR w.price LIKE ?`;
+    sql += ` WHERE p.name LIKE ? 
+             OR p.description LIKE ? 
+             OR c.name LIKE ? 
+             OR p.lang LIKE ? 
+             OR p.price LIKE ?`;
 
     const searchParam = `%${search}%`;
     values.push(searchParam, searchParam, searchParam, searchParam, searchParam);
   }
 
-  sql += ` ORDER BY w.created_at DESC`;
+  sql += ` ORDER BY p.created_at DESC`;
 
   const [rows] = await pool.query(sql, values);
   return rows;
@@ -32,7 +32,7 @@ const findAll = async (search = '', lang) => {
 const findAll_fr = async () => {
   let sql = `
   SELECT p.*, 
-         b.name as brand_name, b.slug as brand_slug,
+         c.name as category_name, c.slug as category_slug,
          CONCAT('[', 
             GROUP_CONCAT(DISTINCT JSON_OBJECT('color', pi.color, 'color_fr', pi.color_fr) SEPARATOR ','), 
          ']') as colors_fr,
@@ -42,7 +42,7 @@ const findAll_fr = async () => {
          ']') as sizes_fr
          
   FROM products p
-  LEFT JOIN brands b ON p.brand_id = b.id
+  LEFT JOIN categories c ON p.category_id = c.id
   LEFT JOIN product_inventory pi ON p.id = pi.product_id
   WHERE p.lang = 'fr'
   GROUP BY p.id
@@ -87,7 +87,7 @@ const findAll_fr = async () => {
 const findAll_ar = async () => {
   let sql = `
   SELECT p.*, 
-         b.name as brand_name, b.slug as brand_slug,
+         c.name as category_name, c.slug as category_slug,
          CONCAT('[', 
             GROUP_CONCAT(DISTINCT JSON_OBJECT('color', pi.color, 'color_ar', pi.color_ar) SEPARATOR ','), 
          ']') as colors_ar,
@@ -97,7 +97,7 @@ const findAll_ar = async () => {
          ']') as sizes_ar
          
   FROM products p
-  LEFT JOIN brands b ON p.brand_id = b.id
+  LEFT JOIN categories b ON p.category_id = c.id
   LEFT JOIN product_inventory pi ON p.id = pi.product_id
   WHERE p.lang = 'ar'
   GROUP BY p.id
@@ -105,7 +105,6 @@ const findAll_ar = async () => {
 
   const [rows] = await pool.query(sql);
 
-  // معالجة البيانات وتحويل النصوص إلى مصفوفات JSON حقيقية
   const formattedRows = rows.map(row => {
     let parsedColors = [];
     let parsedSizes = [];
@@ -140,47 +139,47 @@ const findAll_ar = async () => {
 
 const search = async (searchQuery = '', lang) => {
   let sql = `
-    SELECT w.*, 
-           b.name as brand_name, b.slug as brand_slug
-    FROM products w
-    LEFT JOIN brands b ON w.brand_id = b.id`;
+    SELECT p.*, 
+           c.name as category_name, c.slug as category_slug
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id`;
 
   const values = [];
 
   if (searchQuery.trim() !== '') {
-    sql += ` WHERE w.name LIKE ? 
-             OR w.description LIKE ? 
-             OR b.name LIKE ? 
-             OR w.lang LIKE ? 
-             OR w.price LIKE ?`;
+    sql += ` WHERE p.name LIKE ? 
+             OR p.description LIKE ? 
+             OR c.name LIKE ? 
+             OR p.lang LIKE ? 
+             OR p.price LIKE ?`;
 
     const searchParam = `%${searchQuery}%`;
     values.push(searchParam, searchParam, searchParam, searchParam, searchParam);
   }
 
-  sql += ` ORDER BY w.created_at DESC`;
+  sql += ` ORDER BY p.created_at DESC`;
   const [rows] = await pool.query(sql, values);
   return rows;
 };
 
 const findAllWithDetails = async (lang) => {
   let sql = `
-    SELECT w.*, 
-           b.name as brand_name, b.slug as brand_slug
-    FROM products w
-    LEFT JOIN brands b ON w.brand_id = b.id
+    SELECT p.*, 
+           c.name as category_name, c.slug as category_slug
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
   `;
 
   const queryParams = [];
 
   if (lang) {
-    sql += " WHERE w.lang = ? AND w.status = 'public'";
+    sql += " WHERE p.lang = ? AND p.status = 'public'";
     queryParams.push(lang);
   } else {
-    sql += " WHERE w.status = 'public'";
+    sql += " WHERE p.status = 'public'";
   }
 
-  sql += ' ORDER BY w.created_at DESC';
+  sql += ' ORDER BY p.created_at DESC';
 
   const [rows] = await pool.query(sql, queryParams);
   return rows;
@@ -193,9 +192,9 @@ const findBySlug = async (slug) => {
   // 1. جلب بيانات المنتج الأساسية
   const sqlProduct = `
     SELECT p.*, 
-           b.name as brand_name, b.slug as brand_slug
+           c.name as category_name, c.slug as category_slug
     FROM products p
-    LEFT JOIN brands b ON p.brand_id = b.id
+    LEFT JOIN categories c ON p.brand_id = c.id
     WHERE p.slug = ?
   `;
 
@@ -240,11 +239,11 @@ const findBySlug = async (slug) => {
 };
 const findById = async (id) => {
   const sql = `
-    SELECT w.*, 
-           b.name as brand_name, b.slug as brand_slug
-    FROM products w
-    LEFT JOIN brands b ON w.brand_id = b.id
-    WHERE w.id = ?
+    SELECT p.*, 
+           c.name as category_name, c.slug as category_slug
+    FROM products p
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE p.id = ?
   `;
   const [rows] = await pool.query(sql, [id]);
   return rows[0];
@@ -253,10 +252,10 @@ const findById = async (id) => {
 
 const findByBrandId = async (id) => {
   const sql = `
-    SELECT w.*, 
+    SELECT p.*, 
            b.name as brand_name, b.slug as brand_slug 
-    FROM products w
-    LEFT JOIN brands b ON w.brand_id = b.id
+    FROM products p
+    LEFT JOIN brands b ON p.brand_id = b.id
     WHERE b.id = ?
   `;
   const [rows] = await pool.query(sql, [id]);

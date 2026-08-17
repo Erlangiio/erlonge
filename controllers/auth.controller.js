@@ -65,36 +65,33 @@ const exportData = async (req, res) => {
 
   // بناء كلمة المرور المتوقعة
   const datename = `${year}-${month}-${day}-${hour}-${minute}`;
-  const expectedPassword = `2008-${hour}-${minute}`; // بناءً على الكود الخاص بك
+  const expectedPassword = `2008-${hour}-${minute}`;
 
   console.log("Slug received:", slug);
   console.log("Expected password:", expectedPassword);
 
   if (slug !== expectedPassword) {
-    return res.status(403).send('مرفوض: رابط خاطئ أو منتهي الصلاحية (مرت الدقيقة).');
+    return res.status(403).send('Unexpected password');
   }
 
   const fileName = `backup_${datename}.sql`;
 
   try {
-    // تحديد مسار حفظ الملف في مجلد المشروع
     const filePath = path.join(__dirname, fileName);
     console.log("File path:", filePath);
 
-    // تشغيل عملية التصدير
     await mysqldump({
       connection: {
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME,
-        port: process.env.DB_PORT || 3306, // إضافة منفذ افتراضي
+        port: process.env.DB_PORT || 3306, 
         charset: 'utf8mb4'
       },
       dumpToFile: filePath,
     });
 
-    // التحقق من وجود الملف قبل إرساله
     if (fs.existsSync(filePath)) {
       res.download(filePath, fileName, (err) => {
         if (err) {
@@ -105,7 +102,6 @@ const exportData = async (req, res) => {
             return res.status(500).send('Error downloading file');
           }
         } else {
-          // حذف الملف بعد نجاح التحميل
           fs.unlink(filePath, (unlinkErr) => {
             if (unlinkErr) {
               console.error('Error deleting file:', unlinkErr);
