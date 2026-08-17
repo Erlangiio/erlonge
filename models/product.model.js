@@ -3,7 +3,7 @@ const pool = require('../config/db');
 const findAll = async (search = '', lang) => {
   let sql = `
     SELECT p.*, 
-           category.name as category_name, c.slug as category_slug
+           c.name as category_name, c.slug as category_slug
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id`;
 
