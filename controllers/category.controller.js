@@ -43,6 +43,7 @@ const getCategoryBySlug = async (req, res) => {
     console.log(products);
 
     category.products = products;
+    console.log(category)
     res.status(200).json(category);
   } catch (error) {
     return res.status(404).json({ message: "category Error" });

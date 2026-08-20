@@ -395,7 +395,7 @@ const findByTag = async (slug, lang) => {
   return {
     name: formattedName,
     slug: slug,
-    img: products[0].img,
+    img: JSON.parse(products[0].images)[1],
     created_at: products[0].created_at,
     updated_at: new Date().toISOString(),
     status: "public",
