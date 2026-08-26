@@ -194,7 +194,7 @@ const findBySlug = async (slug) => {
     SELECT p.*, 
            c.name as category_name, c.slug as category_slug
     FROM products p
-    LEFT JOIN categories c ON p.brand_id = c.id
+    LEFT JOIN categories c ON p.category_id = c.id
     WHERE p.slug = ?
   `;
 
