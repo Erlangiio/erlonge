@@ -189,12 +189,11 @@ const findAllWithDetails = async (lang) => {
 
 
 const findBySlug = async (slug) => {
-  // 1. جلب بيانات المنتج الأساسية
   const sqlProduct = `
     SELECT p.*, 
            c.name as category_name, c.slug as category_slug
     FROM products p
-    LEFT JOIN categories c ON p.brand_id = c.id
+    LEFT JOIN categories c ON p.category_id = c.id
     WHERE p.slug = ?
   `;
 
@@ -396,8 +395,6 @@ const findByTag = async (slug, lang) => {
     name: formattedName,
     slug: slug,
     img: JSON.parse(products[0].images)[1],
-    created_at: products[0].created_at,
-    updated_at: new Date().toISOString(),
     status: "public",
     lang: products[0].lang || "fr",
     products: products
