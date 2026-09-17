@@ -75,8 +75,8 @@ const findAll_fr = async () => {
 
     return {
       ...row,
-      colors_fr: parsedColors, 
-      sizes_fr: parsedSizes    
+      colors_fr: parsedColors,
+      sizes_fr: parsedSizes
     };
   });
 
@@ -280,7 +280,7 @@ const create = async (productData) => {
     sku, name, slug, tags, text, sizes, materiel, colors, img, images, price,
     oldPrice, old_price, // استيعاب التسميتين
     description,
-    brandId, brand_id,category_id,   // استيعاب التسميتين
+    brandId, brand_id, category_id,   // استيعاب التسميتين
     status, lang
   } = productData;
 
@@ -299,11 +299,11 @@ const create = async (productData) => {
       sku,
       name,
       slug,
-      tags ,
-      text ,
+      tags,
+      text,
       typeof sizes === 'string' ? sizes : JSON.stringify(sizes || []),
       typeof colors === 'string' ? colors : JSON.stringify(colors || []),
-      materiel ,
+      materiel,
       img,
       typeof images === 'string' ? images : JSON.stringify(images || []),
       price,
@@ -385,7 +385,13 @@ const remove = async (id) => {
 };
 
 const findByTag = async (slug, lang) => {
-  const [products] = await pool.query('SELECT * FROM products p WHERE p.lang = ?  AND  p.tags LIKE ?', [lang, `%${slug}%`]);
+
+  const [products] = await pool.query(`
+  SELECT p.*, c.name AS category_name 
+  FROM products p
+  LEFT JOIN categories c ON p.category_id = c.id
+  WHERE p.lang = ? AND p.tags LIKE ?
+`, [lang, `%${slug}%`]);
 
   if (products.length === 0) {
     return null;
