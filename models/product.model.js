@@ -391,6 +391,7 @@ const findByTag = async (slug, lang) => {
   FROM products p
   LEFT JOIN categories c ON p.category_id = c.id
   WHERE p.lang = ? AND p.tags LIKE ?
+  ORDER BY p.created_at DESC
 `, [lang, `%${slug}%`]);
 
   if (products.length === 0) {
